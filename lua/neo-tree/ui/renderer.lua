@@ -686,21 +686,31 @@ local set_window_mappings = function(state)
         log.trace("Skipping mapping for %s", cmd)
       else
         local map_options = vim.deepcopy(mapping_options)
+        local desc
         if type(func) == "table" then
           for key, value in pairs(func) do
             if key ~= "command" and key ~= 1 and key ~= "config" then
               map_options[key] = value
             end
           end
+          if type(func.desc) == "string" then
+            desc = func.desc
+          end
           config = func.config or {}
           func = func.command or func[1]
         end
-        if type(func) == "string" then
+
+        if desc ~= nil then
+          resolved_mappings[cmd] = { text = desc }
+        elseif type(func) == "string" then
           resolved_mappings[cmd] = { text = func }
-          vfunc = state.commands[func .. "_visual"]
-          func = state.commands[func]
         elseif type(func) == "function" then
           resolved_mappings[cmd] = { text = "<function>" }
+        end
+
+        if type(func) == "string" then
+          vfunc = state.commands[func .. "_visual"]
+          func = state.commands[func]
         end
         if type(func) == "function" then
           resolved_mappings[cmd].handler = function()
